@@ -4,7 +4,7 @@ VyOS build-ami - this is fork from original repository https://github.com/vyos/b
 
 **NOTE:**
 Changes I've made:
-1. Add ansible task to change init script with user data script... 
+1. Add ansible task to change init script with user data... 
 
 Now you can use your own command in user data:
 
