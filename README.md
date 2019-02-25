@@ -1,4 +1,4 @@
-VyOS build-ami - this is fork from original repository https://github.com/pci-sc/build-ami
+VyOS build-ami - this is fork from original repository https://github.com/vyos/build-ami
 
 --------------
 
