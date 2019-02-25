@@ -1,49 +1,50 @@
-VyOS build-ami
+VyOS build-ami - this is fork from original repository
+
+```
+https://github.com/pci-sc/build-ami
+```
+
 --------------
 
-**NOTE:** You can support VyOS development by using the official VyOS AMI from the marketplace: https://aws.amazon.com/marketplace/pp/B074KJK4WC
-(starting from $50/year).
+**NOTE:**
+Changes I've made:
+1. Add ansible task to change init script with user data script... 
 
-The official AMIs are built with these exact scripts so if you build one for yourself, your own AMI will be functionally identical to the official ones.
+Now you can use your own command in user data:
 
-## Requirements
+```
+#cloud-boothook
+#!/bin/bash
 
-The build scripts are based on ansible and awscli.
+# add debian repo
+sudo bash -c 'cat << EOF >/etc/apt/sources.list.d/debian.list
+deb http://httpredir.debian.org/debian jessie main contrib non-free
+EOF'
 
-To install and configure awscli, follow the user guide: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html
-Make sure the python modules boto, botocore, and boto3 also gets installed.
+# install awscli
+sudo apt-get update
+sudo curl -O https://bootstrap.pypa.io/get-pip.py
+sudo python get-pip.py --user
+sudo /root/.local/bin/pip install awscli --upgrade --user
 
-Ansible is available from the repositories on most Linux distributions.
+# if you need to load config or other vyos commands you can do this here
+bash -c 'cat << EOF >/tmp/load_config
+#!/bin/vbash
+source /opt/vyatta/etc/functions/script-template
+configure
+load
+commit
+save
+EOF'
+chmod a+x /tmp/load_config
+sg vyattacfg -c /tmp/load_config
+```
 
-These scripts and playbooks should work on any Linux system, or, theoretically, on any system supported by ansible and awscli.
 
-At this time Python3 support is limited by its supports by ansible, so it's safer to use Python 2.7.
 
-## Usage
-
+Build is the same as original:
 ```
 ./vyos-build-ami <VyOS ISO URL>
 ```
 
-The baseline code now supports only VyOS >=1.2.0. If you want to build an AMI from VyOS 1.1.x, check out the 1.1.x tag.
 
-## Operation
-
-Since there is no easy way to upload a disk image to AWS directly, the playbooks create a Debian Jessie instance and run a sequence of commands to create an EBS disk and unpack the
-VyOS image to it, emulating the installation procedure.
-
-## Troubleshooting
-
-**NOTE:** If playbook fails, it leaves behind a t2.micro instance, an SSH key pair names "vyos-build-ami", and a security group also named "vyos-build-ami".
-If you want to restart the process from the beginning, remove those by hand.
-
-Sometimes playbook tasks fail through no one's fault, for example, SSH timeouts if an instance takes too long to create.
-
-Note that AMI name is fixed, and registering the AMI will fail if you try to run the playbooks when you already have one in your account. De-register the old one first.
-
-## License
-
-These scripts are available under the MIT license. See the LICENSE file for more info.
-
-build-ami playbooks were originally written by hydrajump (https://github.com/hydrajump) and are now maintained
-by the VyOS team.
